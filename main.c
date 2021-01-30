@@ -18,7 +18,10 @@ void main()
   }
 
   printf("\n\nOutput:\n\n");
-
+  
+  int OP, L, M;
+  
+  
   fclose(input);
   fclose(output);
 }
