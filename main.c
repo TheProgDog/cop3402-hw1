@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void main()
+void main(int argc, char *argv[])
 {
-  FILE *input = fopen("input.txt", "r");
+  FILE *input = fopen(argv[1], "r");
   FILE *output = fopen("output.txt", "w");
 
   int reader = 0;
@@ -11,8 +11,7 @@ void main()
   char dlim[] = " ";
   int instruction[100][3];
 
-  printf("The input is:\n\n");
-  int counter = 0;
+  int counter = 0, BP = 0, SP = -1;
 
   while (!feof(input))
   {
@@ -29,45 +28,101 @@ void main()
 
   printf("\n\nOutput:\n\n");
 
-  for (int i = 0; i < counter; i++)
+  printf("\t\t\tPC\tBP\tSP\tstack\n");
+
+  for (int PC = 0; PC < counter; PC++)
   {
-    switch(instruction[i][0])
+    int L = instruction[PC][1], M = instruction[PC][2];
+
+    switch(instruction[PC][0])
     {
       case 1:
-        printf("LIT ");
+        printf("%d\tLIT %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
         break;
       case 2:
-        printf("OPR ");
+        printf("%d\tOPR %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
+
+        // Do some stuff here with operations based on M:
+        // 0 -> RET
+        // 1 -> NEG
+        // 2 -> ADD
+        // 3 -> SUB
+        // 4 -> MUL
+        // 5 -> DIV
+        // 6 -> ODD
+        // 7 -> MOD
+        // 8 -> EQL
+        // 9 -> NEQ
+        // 10 -> LSS
+        // 11 -> LEQ
+        // 12 -> GTR
+        // 13 -> GEQ
+
         break;
       case 3:
-        printf("LOD ");
+        printf("%d\tLOD %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
         break;
       case 4:
-        printf("STO ");
+        printf("%d\tSTO %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
         break;
       case 5:
-        printf("CAL ");
+        printf("%d\tCAL %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
+
+        BP = SP + 1;
+        PC = M;
+        
         break;
       case 6:
-        printf("INC ");
+        printf("%d\tINC %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
         break;
       case 7:
-        printf("JMP ");
+        // pc <- M, adjusted for arrays being indexed at 0
+        printf("%d\tJMP %d %d \t%d \t%d \t%d\n", PC, L, M, M, BP, SP);
+
+        PC = M - 1;
+
         break;
       case 8:
-        printf("JPC ");
+        printf("%d\tJPC %d %d \t%d \t%d \t%d\n", PC, L, M, M, BP, SP);
+
+        // pc <- M iff top of stack == 0
+
         break;
       case 9:
-        printf("SYS ");
+
+        if (M == 2)
+        {
+          int userInput = 0;
+
+          printf("Please Enter an Integer: ");
+          scanf("%d", &userInput);
+
+          // Do stuff with userInput -- add it to the top of the stack when stack is implemented
+        }
+
+        printf("%d\tSYS %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
         break;
       default:
         break;
     }
 
-    printf("%d %d\n", instruction[i][1], instruction[i][2]);
   }
 
 
   fclose(input);
   fclose(output);
+}
+
+int base(int stack[], int level, int BP)
+{
+  int base = BP;
+  int counter = level;
+
+  while (counter > 0)
+  {
+    base = stack[base];
+    counter--;
+  }
+
+  return base;
 }
