@@ -1,6 +1,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MAX_STACK_HEIGHT 50;
+#define MAX_CODE_LENGTH 100;
+
+typedef struct node {
+  int value;
+  struct node* next;
+} node;
+
+node* head = NULL;
+
+bool push(int value) {
+  node* newnode = malloc(sizeof(node));
+  if (newnode == NULL)
+     return false;
+  newnode->value = value;
+  newnode->next = head;
+  head = newnode;
+  
+  return true;
+}
+int pop() {
+  if (head == NULL)
+    return -1;
+  
+  int result = head->value;
+  node* tmp = head;
+  head = head->next;
+  free(tmp);
+  
+  return result;
+}
 void main()
 {
   FILE *input = fopen("input.txt", "r");
@@ -9,7 +40,7 @@ void main()
   char reader = 'a';
   char OP, L, M;
   char dlim[] = " ";
-  int instruction[100][3];
+  int instruction[MAX_CODE_LENGTH][3];
 
   printf("The input is:\n\n");
   int i = 0;
@@ -33,3 +64,4 @@ void main()
   fclose(input);
   fclose(output);
 }
+
