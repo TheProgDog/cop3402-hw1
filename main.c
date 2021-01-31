@@ -1,6 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MAX_STACK_HEIGHT 50
+#define MAX_CODE_LENGTH 100
+#define EMPTY (-1)
+#define STACK_EMPTY INT_MIN
+
+int stack[MAX_STACK_HEIGHT];
+int top = -1;
+
+bool push(int value) {
+  if(top >= MAX_STACK_HEIGHT - 1)
+    return false;
+  top++;
+  stack[top] = value;
+  
+  return true;
+}
+
+int pop() {
+  if (top == EMPTY)
+    return STACK_EMPTY;
+  
+  int result = stack[top];
+  top--;
+  
+  return result;
+}
+
 void main(int argc, char *argv[])
 {
   FILE *input = fopen(argv[1], "r");
@@ -9,7 +36,7 @@ void main(int argc, char *argv[])
   int reader = 0;
   char OP, L, M;
   char dlim[] = " ";
-  int instruction[100][3];
+  int instruction[MAX_CODE_LENGTH][3];
 
   int counter = 0, BP = 0, SP = -1;
 
