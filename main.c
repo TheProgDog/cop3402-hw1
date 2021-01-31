@@ -1,34 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_STACK_HEIGHT 50;
-#define MAX_CODE_LENGTH 100;
+#define MAX_STACK_HEIGHT 50
+#define MAX_CODE_LENGTH 100
+#define EMPTY (-1)
+#define STACK_EMPTY INT_MIN
 
-typedef struct node {
-  int value;
-  struct node* next;
-} node;
+int stack[MAX_STACK_HEIGHT];
+int top = -1;
 
-node* head = NULL;
 
 bool push(int value) {
-  node* newnode = malloc(sizeof(node));
-  if (newnode == NULL)
-     return false;
-  newnode->value = value;
-  newnode->next = head;
-  head = newnode;
+  if(top >= MAX_STACK_HEIGHT - 1)
+    return false;
+  top++;
+  stack[top] = value;
   
   return true;
 }
 int pop() {
-  if (head == NULL)
-    return -1;
+  if (top == EMPTY)
+    return STACK_EMPTY;
   
-  int result = head->value;
-  node* tmp = head;
-  head = head->next;
-  free(tmp);
+  int result = stack[top];
+  top--;
   
   return result;
 }
