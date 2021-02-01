@@ -25,6 +25,8 @@ void main(int argc, char *argv[])
   char dlim[] = " ";
   int instruction[MAX_CODE_LENGTH][3];
 
+  int halt = 1;
+
   while (!feof(input))
   {
     // This loop the entire line and increases the counter afterwards
@@ -41,10 +43,13 @@ void main(int argc, char *argv[])
   printf("\n\nOutput:\n\n");
 
   printf("\t\t\tPC\tBP\tSP\tstack\n");
+  printf("Initial values:\t\t0\t%d\t%d\n", BP, SP);
 
   for (int PC = 0; PC < counter; PC++)
   {
-    printf("%d\t", PC);
+    int userInput = 0;
+    int counter = PC;
+    //printf("%d\t", PC);
 
     char *opr;
 
@@ -53,8 +58,9 @@ void main(int argc, char *argv[])
     switch(instruction[PC][0])
     {
       case 1:
-        printf("LIT %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+        //printf("LIT %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
 
+        opr = "LIT";
         SP ++;
         push(M);
 
@@ -84,30 +90,73 @@ void main(int argc, char *argv[])
             stack[BP - 1] = stack[SP];
             SP = BP - 1;
             BP = stack[SP + 2];
-            PC = stack[SP + 3];
+            PC = stack[SP + 3] - 1;
+            break;
+          case 1:
+            opr = "NEG";
+            break;
+          case 2:
+            opr = "ADD";
+            break;
+          case 3:
+            opr = "SUB";
+            break;
+          case 4:
+            opr = "MUL";
+            break;
+          case 5:
+            opr = "DIV";
+            break;
+          case 6:
+            opr = "ODD";
+            break;
+          case 7:
+            opr = "MOD";
+            break;
+          case 8:
+            opr = "EQL";
+            break;
+          case 9:
+            opr = "NEQ";
+            break;
+          case 10:
+            opr = "LSS";
+            break;
+          case 11:
+            opr = "LEQ";
+            break;
+          case 12:
+            opr = "GTR";
+            break;
+          case 13:
+            opr = "GEQ";
             break;
           default:
             opr = "ERR";
             break;
         }
 
-        printf("%s %d %d \t%d \t%d \t%d", opr, L, M, PC + 1, BP, SP);
+        //printf("%s %d %d \t%d \t%d \t%d", opr, L, M, PC + 1, BP, SP);
 
         break;
       case 3:
+        opr = "LOD";
         SP++;
         stack[SP] = stack[base(stack, L, BP) + M];
 
-        printf("LOD %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+        //printf("LOD %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
         break;
       case 4:
+        opr = "STO";
         stack[base(stack, L, BP) + M] = stack[SP];
-        stack[SP]--;
+        SP--;
 
-        printf("STO %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+        //printf("STO %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
         break;
       case 5:
-        printf("CAL %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+        //printf("CAL %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+
+        opr = "CAL";
 
         stack[SP + 1] = base(stack, L, BP);
         stack[SP + 2] = BP;
@@ -119,21 +168,22 @@ void main(int argc, char *argv[])
 
         break;
       case 6:
+
+        opr = "INC";
+
         // sp <- sp + M
         SP += M;
 
-        for (int i = 0; i < M; i++)
-        {
-          push(0);
-        }
-
-        printf("INC %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+        //printf("INC %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
 
         break;
       case 7:
-        // pc <- M, adjusted for arrays being indexed at 0
-        printf("JMP %d %d \t%d \t%d \t%d", L, M, M, BP, SP);
 
+        //printf("JMP %d %d \t%d \t%d \t%d", L, M, M, BP, SP);
+
+        opr = "JMP";
+
+        // pc <- M, adjusted for arrays being indexed at 0
         PC = M - 1;
 
         break;
@@ -143,28 +193,41 @@ void main(int argc, char *argv[])
         if (SP <= 0)
           PC = M - 1;
 
-
-        printf("JPC %d %d \t%d \t%d \t%d", L, M, PC, BP, SP);
+        opr = "JPC";
+        //printf("JPC %d %d \t%d \t%d \t%d", L, M, PC, BP, SP);
 
         break;
       case 9:
 
-        if (M == 2)
+        opr = "SYS";
+
+        switch (M)
         {
-          int userInput = 0;
+          case 1:
+            printf("Top of Stack Value: %d\n", pop(stack));
+            break;
+          case 2:
+            printf("Please Enter an Integer: ");
+            scanf("%d", &userInput);
 
-          printf("Please Enter an Integer: ");
-          scanf("%d", &userInput);
+            SP++;
+            push(userInput);
 
-          SP++;
-          push(userInput);
+            break;
+          case 3:
+            halt = 0;
+            break;
+          default:
+            break;
         }
 
-        printf("SYS %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+        //printf("SYS %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
         break;
       default:
         break;
     }
+
+    printf("%d\t%s %d %d \t%d \t%d \t%d", counter, opr, L, M, PC + 1, BP, SP);
 
     if (SP > -1)
     {
@@ -172,14 +235,17 @@ void main(int argc, char *argv[])
 
       for (int i = 0; i <= SP; i++)
       {
-        printf("%d ", stack[i]);
-
-        if (i == BP - 1)
+        if (i == BP && BP != 0)
           printf("| ");
+
+        printf("%d ", stack[i]);
       }
     }
 
     printf("\n");
+
+    if (halt == 0)
+      break;
 
   }
 
