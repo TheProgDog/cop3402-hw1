@@ -1,5 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <limits.h>
+
+#define MAX_STACK_HEIGHT 50
+#define MAX_CODE_LENGTH 100
+#define EMPTY (-1)
+#define STACK_EMPTY INT_MIN
+
+int stack[MAX_STACK_HEIGHT];
+int counter = 0, BP = 0, SP = -1;
+
+bool push(int);
+int pop();
+int base(int[], int, int);
 
 #define MAX_STACK_HEIGHT 50
 #define MAX_CODE_LENGTH 100
@@ -38,7 +52,7 @@ void main(int argc, char *argv[])
   char dlim[] = " ";
   int instruction[MAX_CODE_LENGTH][3];
 
-  int counter = 0, BP = 0, SP = -1;
+  int halt = 1;
 
   while (!feof(input))
   {
@@ -56,18 +70,29 @@ void main(int argc, char *argv[])
   printf("\n\nOutput:\n\n");
 
   printf("\t\t\tPC\tBP\tSP\tstack\n");
+  printf("Initial values:\t\t0\t%d\t%d\n", BP, SP);
 
   for (int PC = 0; PC < counter; PC++)
   {
+    int userInput = 0;
+    int counter = PC;
+    //printf("%d\t", PC);
+
+    char *opr;
+
     int L = instruction[PC][1], M = instruction[PC][2];
 
     switch(instruction[PC][0])
     {
       case 1:
-        printf("%d\tLIT %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
+        //printf("LIT %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+
+        opr = "LIT";
+        SP ++;
+        push(M);
+
         break;
       case 2:
-        printf("%d\tOPR %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
 
         // Do some stuff here with operations based on M:
         // 0 -> RET
@@ -85,59 +110,194 @@ void main(int argc, char *argv[])
         // 12 -> GTR
         // 13 -> GEQ
 
+        switch (M)
+        {
+          case 0:
+            opr = "RTN";
+            stack[BP - 1] = stack[SP];
+            SP = BP - 1;
+            BP = stack[SP + 2];
+            PC = stack[SP + 3] - 1;
+            break;
+          case 1:
+            opr = "NEG";
+            break;
+          case 2:
+            opr = "ADD";
+            break;
+          case 3:
+            opr = "SUB";
+            break;
+          case 4:
+            opr = "MUL";
+            break;
+          case 5:
+            opr = "DIV";
+            break;
+          case 6:
+            opr = "ODD";
+            break;
+          case 7:
+            opr = "MOD";
+            break;
+          case 8:
+            opr = "EQL";
+            break;
+          case 9:
+            opr = "NEQ";
+            break;
+          case 10:
+            opr = "LSS";
+            break;
+          case 11:
+            opr = "LEQ";
+            break;
+          case 12:
+            opr = "GTR";
+            break;
+          case 13:
+            opr = "GEQ";
+            break;
+          default:
+            opr = "ERR";
+            break;
+        }
+
+        //printf("%s %d %d \t%d \t%d \t%d", opr, L, M, PC + 1, BP, SP);
+
         break;
       case 3:
-        printf("%d\tLOD %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
+        opr = "LOD";
+        SP++;
+        stack[SP] = stack[base(stack, L, BP) + M];
+
+        //printf("LOD %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
         break;
       case 4:
-        printf("%d\tSTO %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
+        opr = "STO";
+        stack[base(stack, L, BP) + M] = stack[SP];
+        SP--;
+
+        //printf("STO %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
         break;
       case 5:
-        printf("%d\tCAL %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
+        //printf("CAL %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+
+        opr = "CAL";
+
+        stack[SP + 1] = base(stack, L, BP);
+        stack[SP + 2] = BP;
+        stack[SP + 3] = PC + 1;
+        stack[SP + 4] = stack[SP];
 
         BP = SP + 1;
-        PC = M;
-        
+        PC = M - 1;
+
         break;
       case 6:
-        printf("%d\tINC %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
+
+        opr = "INC";
+
+        // sp <- sp + M
+        SP += M;
+
+        //printf("INC %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+
         break;
       case 7:
-        // pc <- M, adjusted for arrays being indexed at 0
-        printf("%d\tJMP %d %d \t%d \t%d \t%d\n", PC, L, M, M, BP, SP);
 
+        //printf("JMP %d %d \t%d \t%d \t%d", L, M, M, BP, SP);
+
+        opr = "JMP";
+
+        // pc <- M, adjusted for arrays being indexed at 0
         PC = M - 1;
 
         break;
       case 8:
-        printf("%d\tJPC %d %d \t%d \t%d \t%d\n", PC, L, M, M, BP, SP);
 
         // pc <- M iff top of stack == 0
+        if (SP <= 0)
+          PC = M - 1;
+
+        opr = "JPC";
+        //printf("JPC %d %d \t%d \t%d \t%d", L, M, PC, BP, SP);
 
         break;
       case 9:
 
-        if (M == 2)
+        opr = "SYS";
+
+        switch (M)
         {
-          int userInput = 0;
+          case 1:
+            printf("Top of Stack Value: %d\n", pop(stack));
+            break;
+          case 2:
+            printf("Please Enter an Integer: ");
+            scanf("%d", &userInput);
 
-          printf("Please Enter an Integer: ");
-          scanf("%d", &userInput);
+            SP++;
+            push(userInput);
 
-          // Do stuff with userInput -- add it to the top of the stack when stack is implemented
+            break;
+          case 3:
+            halt = 0;
+            break;
+          default:
+            break;
         }
 
-        printf("%d\tSYS %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
+        //printf("SYS %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
         break;
       default:
         break;
     }
+
+    printf("%d\t%s %d %d \t%d \t%d \t%d", counter, opr, L, M, PC + 1, BP, SP);
+
+    if (SP > -1)
+    {
+      printf("\t");
+
+      for (int i = 0; i <= SP; i++)
+      {
+        if (i == BP && BP != 0)
+          printf("| ");
+
+        printf("%d ", stack[i]);
+      }
+    }
+
+    printf("\n");
+
+    if (halt == 0)
+      break;
 
   }
 
 
   fclose(input);
   fclose(output);
+}
+
+bool push(int value) {
+  if(SP >= MAX_STACK_HEIGHT - 1)
+    return false;
+
+  stack[SP] = value;
+
+  return true;
+}
+
+int pop() {
+  if (SP == EMPTY)
+    return STACK_EMPTY;
+
+  int result = stack[SP];
+  SP--;
+
+  return result;
 }
 
 int base(int stack[], int level, int BP)
