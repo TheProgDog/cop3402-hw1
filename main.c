@@ -71,6 +71,7 @@ void main(int argc, char *argv[])
 
         // Do some stuff here with operations based on M:
         // 0 -> RET
+        
         // 1 -> NEG
         // 2 -> ADD
         // 3 -> SUB
@@ -84,7 +85,82 @@ void main(int argc, char *argv[])
         // 11 -> LEQ
         // 12 -> GTR
         // 13 -> GEQ
-
+        switch (M)
+        {
+          case 0:
+            opr = "RTN";
+            stack[BP - 1] = stack[SP];
+            SP = BP - 1;
+            BP = stack[SP + 2];
+            PC = stack[SP + 3] - 1;
+            break;
+          case 1:
+            opr = "NEG";
+            stack[SP] = -1 * stack[SP];
+            break;
+          case 2:
+            opr = "ADD";
+            SP -= 1;
+            stack[SP] = stack[SP] + stack[SP + 1];
+            break;
+          case 3:
+            opr = "SUB";
+            SP -= 1;
+            stack[SP] = stack[SP] - stack[SP + 1];
+            break;
+          case 4:
+            opr = "MUL";
+            SP -= 1;
+            stack[SP] = stack[SP] * stack[SP + 1];
+            break;
+          case 5:
+            opr = "DIV";
+            SP -= 1;
+            stack[SP] = stack[SP] / stack[SP + 1];
+            break;
+          case 6:
+            opr = "ODD";
+            stack[SP] = stack[SP] % 2;
+            break;
+          case 7:
+            opr = "MOD";
+            SP -= 1;
+            stack[SP] = stack[SP] % stack[SP + 1];
+            break;
+          case 8:
+            opr = "EQL";
+            SP -= 1;
+            stack[SP] = stack[SP] == stack[SP + 1];
+            break;
+          case 9:
+            opr = "NEQ";
+            SP -= 1;
+            stack[SP] = stack[SP] != stack[SP + 1];
+            break;
+          case 10:
+            opr = "LSS";
+            SP -= 1;
+            stack[SP] = stack[SP] < stack[SP + 1];
+            break;
+          case 11:
+            opr = "LEQ";
+            SP -= 1;
+            stack[SP] = stack[SP] <= stack[SP + 1];
+            break;
+          case 12:
+            opr = "GTR";
+            SP -= 1;
+            stack[SP] = stack[SP] > stack[SP + 1];
+            break;
+          case 13:
+            opr = "GEQ";
+            SP -= 1;
+            stack[SP] = stack[SP] >= stack[SP + 1];
+            break;
+          default:
+            opr = "ERR";
+            break;
+        }
         break;
       case 3:
         printf("%d\tLOD %d %d \t%d \t%d \t%d\n", PC, L, M, PC + 1, BP, SP);
