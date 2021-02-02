@@ -22,7 +22,7 @@ int base(int[], int, int);
 
 int stack[MAX_STACK_HEIGHT];
 int top = -1;
-
+// push function pushes an int value into a stack
 bool push(int value) {
   if(top >= MAX_STACK_HEIGHT - 1)
     return false;
@@ -31,7 +31,7 @@ bool push(int value) {
   
   return true;
 }
-
+// pops the top value from a stack and returns that value
 int pop() {
   if (top == EMPTY)
     return STACK_EMPTY;
@@ -93,22 +93,6 @@ void main(int argc, char *argv[])
 
         break;
       case 2:
-
-        // Do some stuff here with operations based on M:
-        // 0 -> RET
-        // 1 -> NEG
-        // 2 -> ADD
-        // 3 -> SUB
-        // 4 -> MUL
-        // 5 -> DIV
-        // 6 -> ODD
-        // 7 -> MOD
-        // 8 -> EQL
-        // 9 -> NEQ
-        // 10 -> LSS
-        // 11 -> LEQ
-        // 12 -> GTR
-        // 13 -> GEQ
 
         switch (M)
         {
