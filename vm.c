@@ -26,11 +26,6 @@ typedef struct instruction
 void main(int argc, char *argv[])
 {
   FILE *input = fopen(argv[1], "r");
-  FILE *output = fopen("output.txt", "w");
-
-  int reader = 0;
-  char OP, L, M;
-  char dlim[] = " ";
   int instruction[MAX_CODE_LENGTH][3];
 
   struct instruction line;
@@ -39,27 +34,25 @@ void main(int argc, char *argv[])
 
   while (!feof(input))
   {
-    // This loop the entire line and increases the counter afterwards
+    // This loops through the entire line and increases the counter afterwards
     for (int i = 0; i < 3; i++)
     {
       fscanf(input, "%d", &instruction[counter][i]);
     }
 
-    printf("%d %d %d\n", instruction[counter][0], instruction[counter][1], instruction[counter][2]);
-
     counter++;
   }
 
-  printf("\n\nOutput:\n\n");
 
+  // Reading input is over, now convert it into ISA:
   printf("\t\t\tPC\tBP\tSP\tstack\n");
   printf("Initial values:\t\t0\t%d\t%d\n", BP, SP);
 
   for (int PC = 0; PC < counter; PC++)
   {
+    // Counter is separate from PC to make printing output easier
     int userInput = 0;
     int counter = PC;
-    //printf("%d\t", PC);
 
     line.L = instruction[PC][1];
     line.M = instruction[PC][2];
@@ -67,8 +60,6 @@ void main(int argc, char *argv[])
     switch(instruction[PC][0])
     {
       case 1:
-        //printf("LIT %d %d \t%d \t%d \t%d", L, line.M, PC + 1, BP, SP);
-
         line.op = "LIT";
         SP ++;
         push(line.M);
@@ -78,7 +69,6 @@ void main(int argc, char *argv[])
 
         // Do some stuff here with operations based on line.M:
         // 0 -> RET
-
         // 1 -> NEG
         // 2 -> ADD
         // 3 -> SUB
@@ -169,26 +159,20 @@ void main(int argc, char *argv[])
             break;
         }
 
-        //printf("%s %d %d \t%d \t%d \t%d", line.op, L, line.M, PC + 1, BP, SP);
-
         break;
       case 3:
         line.op = "LOD";
         SP++;
         stack[SP] = stack[base(stack, line.L, BP) + line.M];
 
-        //printf("LOD %d %d \t%d \t%d \t%d", L, line.M, PC + 1, BP, SP);
         break;
       case 4:
         line.op = "STO";
         stack[base(stack, line.L, BP) + line.M] = stack[SP];
         SP--;
 
-        //printf("STO %d %d \t%d \t%d \t%d", L, line.M, PC + 1, BP, SP);
         break;
       case 5:
-        //printf("CAL %d %d \t%d \t%d \t%d", L, line.M, PC + 1, BP, SP);
-
         line.op = "CAL";
 
         stack[SP + 1] = base(stack, line.L, BP);
@@ -201,19 +185,13 @@ void main(int argc, char *argv[])
 
         break;
       case 6:
-
         line.op = "INC";
 
         // sp <- sp + line.M
         SP += line.M;
 
-        //printf("INC %d %d \t%d \t%d \t%d", L, line.M, PC + 1, BP, SP);
-
         break;
       case 7:
-
-        //printf("JMP %d %d \t%d \t%d \t%d", L, line.M, line.M, BP, SP);
-
         line.op = "JMP";
 
         // pc <- line.M, adjusted for arrays being indexed at 0
@@ -221,21 +199,23 @@ void main(int argc, char *argv[])
 
         break;
       case 8:
-
         // pc <- line.M iff top of stack == 0
         if (SP <= 0)
           PC = line.M - 1;
 
-        line.op = "JPC";
-        //printf("JPC %d %d \t%d \t%d \t%d", L, line.M, PC, BP, SP);
-
         SP--;
+
+        line.op = "JPC";
 
         break;
       case 9:
 
         line.op = "SYS";
 
+        // SYS's function varies based on M
+        // 1 -> Display top of stack, pop
+        // 2 -> Push user input number onto the stack
+        // 3 -> Halt program
         switch (line.M)
         {
           case 1:
@@ -256,20 +236,23 @@ void main(int argc, char *argv[])
             break;
         }
 
-        //printf("SYS %d %d \t%d \t%d \t%d", L, line.M, PC + 1, BP, SP);
         break;
       default:
         break;
     }
 
+    // Main output here: Line #, operation, L, M, next PC, BP, & SP in that order
     printf("%d\t%s %d %d \t%d \t%d \t%d", counter, line.op, line.L, line.M, PC + 1, BP, SP);
 
+
+    // This prints out the stack(s) at the end of each line
     if (SP > -1)
     {
       printf("\t");
 
       for (int i = 0; i <= SP; i++)
       {
+        // Separate stacks from each other
         if (i == BP && BP != 0)
           printf("| ");
 
@@ -279,14 +262,16 @@ void main(int argc, char *argv[])
 
     printf("\n");
 
+    // Only applicable when SYS 0 9 is called
     if (halt == 0)
       break;
 
   }
 
-
+  // Close the FILE to save resources
   fclose(input);
-  fclose(output);
+
+  return 0;
 }
 
 bool push(int value) {
