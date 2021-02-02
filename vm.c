@@ -66,22 +66,7 @@ void main(int argc, char *argv[])
 
         break;
       case 2:
-
-        // Do some stuff here with operations based on line.M:
-        // 0 -> RET
-        // 1 -> NEG
-        // 2 -> ADD
-        // 3 -> SUB
-        // 4 -> MUL
-        // 5 -> DIV
-        // 6 -> ODD
-        // 7 -> MOD
-        // 8 -> EQL
-        // 9 -> NEQ
-        // 10 -> LSS
-        // 11 -> LEQ
-        // 12 -> GTR
-        // 13 -> GEQ
+        
         switch (line.M)
         {
           case 0:
@@ -273,7 +258,7 @@ void main(int argc, char *argv[])
 
   return 0;
 }
-
+// pushes a new element on top of the stack and returns true if the stack isn't full.
 bool push(int value) {
   if(SP >= MAX_STACK_HEIGHT - 1)
     return false;
@@ -282,7 +267,7 @@ bool push(int value) {
 
   return true;
 }
-
+// pops the top item in the stack and returns the value inside.
 int pop() {
   if (SP == EMPTY)
     return STACK_EMPTY;
