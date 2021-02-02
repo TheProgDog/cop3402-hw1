@@ -15,32 +15,13 @@ bool push(int);
 int pop();
 int base(int[], int, int);
 
-#define MAX_STACK_HEIGHT 50
-#define MAX_CODE_LENGTH 100
-#define EMPTY (-1)
-#define STACK_EMPTY INT_MIN
-
-int stack[MAX_STACK_HEIGHT];
-int top = -1;
-
-bool push(int value) {
-  if(top >= MAX_STACK_HEIGHT - 1)
-    return false;
-  top++;
-  stack[top] = value;
-  
-  return true;
-}
-
-int pop() {
-  if (top == EMPTY)
-    return STACK_EMPTY;
-  
-  int result = stack[top];
-  top--;
-  
-  return result;
-}
+typedef struct instruction
+{
+  int opcode;
+  char *op;
+  int L;
+  int M;
+} instruction;
 
 void main(int argc, char *argv[])
 {
@@ -51,6 +32,8 @@ void main(int argc, char *argv[])
   char OP, L, M;
   char dlim[] = " ";
   int instruction[MAX_CODE_LENGTH][3];
+
+  struct instruction line;
 
   int halt = 1;
 
@@ -78,25 +61,24 @@ void main(int argc, char *argv[])
     int counter = PC;
     //printf("%d\t", PC);
 
-    char *opr;
-
-    int L = instruction[PC][1], M = instruction[PC][2];
+    line.L = instruction[PC][1];
+    line.M = instruction[PC][2];
 
     switch(instruction[PC][0])
     {
       case 1:
-        //printf("LIT %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+        //printf("LIT %d %d \t%d \t%d \t%d", L, line.M, PC + 1, BP, SP);
 
-        opr = "LIT";
+        line.op = "LIT";
         SP ++;
-        push(M);
+        push(line.M);
 
         break;
       case 2:
 
-        // Do some stuff here with operations based on M:
+        // Do some stuff here with operations based on line.M:
         // 0 -> RET
-        
+
         // 1 -> NEG
         // 2 -> ADD
         // 3 -> SUB
@@ -110,149 +92,151 @@ void main(int argc, char *argv[])
         // 11 -> LEQ
         // 12 -> GTR
         // 13 -> GEQ
-        switch (M)
+        switch (line.M)
         {
           case 0:
-            opr = "RTN";
+            line.op = "RTN";
             stack[BP - 1] = stack[SP];
             SP = BP - 1;
             BP = stack[SP + 2];
             PC = stack[SP + 3] - 1;
             break;
           case 1:
-            opr = "NEG";
+            line.op = "NEG";
             stack[SP] = -1 * stack[SP];
             break;
           case 2:
-            opr = "ADD";
+            line.op = "ADD";
             SP -= 1;
             stack[SP] = stack[SP] + stack[SP + 1];
             break;
           case 3:
-            opr = "SUB";
+            line.op = "SUB";
             SP -= 1;
             stack[SP] = stack[SP] - stack[SP + 1];
             break;
           case 4:
-            opr = "MUL";
+            line.op = "MUL";
             SP -= 1;
             stack[SP] = stack[SP] * stack[SP + 1];
             break;
           case 5:
-            opr = "DIV";
+            line.op = "DIV";
             SP -= 1;
             stack[SP] = stack[SP] / stack[SP + 1];
             break;
           case 6:
-            opr = "ODD";
+            line.op = "ODD";
             stack[SP] = stack[SP] % 2;
             break;
           case 7:
-            opr = "MOD";
+            line.op = "MOD";
             SP -= 1;
             stack[SP] = stack[SP] % stack[SP + 1];
             break;
           case 8:
-            opr = "EQL";
+            line.op = "EQL";
             SP -= 1;
             stack[SP] = stack[SP] == stack[SP + 1];
             break;
           case 9:
-            opr = "NEQ";
+            line.op = "NEQ";
             SP -= 1;
             stack[SP] = stack[SP] != stack[SP + 1];
             break;
           case 10:
-            opr = "LSS";
+            line.op = "LSS";
             SP -= 1;
             stack[SP] = stack[SP] < stack[SP + 1];
             break;
           case 11:
-            opr = "LEQ";
+            line.op = "LEQ";
             SP -= 1;
             stack[SP] = stack[SP] <= stack[SP + 1];
             break;
           case 12:
-            opr = "GTR";
+            line.op = "GTR";
             SP -= 1;
             stack[SP] = stack[SP] > stack[SP + 1];
             break;
           case 13:
-            opr = "GEQ";
+            line.op = "GEQ";
             SP -= 1;
             stack[SP] = stack[SP] >= stack[SP + 1];
             break;
           default:
-            opr = "ERR";
+            line.op = "ERR";
             break;
         }
 
-        //printf("%s %d %d \t%d \t%d \t%d", opr, L, M, PC + 1, BP, SP);
+        //printf("%s %d %d \t%d \t%d \t%d", line.op, L, line.M, PC + 1, BP, SP);
 
         break;
       case 3:
-        opr = "LOD";
+        line.op = "LOD";
         SP++;
-        stack[SP] = stack[base(stack, L, BP) + M];
+        stack[SP] = stack[base(stack, line.L, BP) + line.M];
 
-        //printf("LOD %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+        //printf("LOD %d %d \t%d \t%d \t%d", L, line.M, PC + 1, BP, SP);
         break;
       case 4:
-        opr = "STO";
-        stack[base(stack, L, BP) + M] = stack[SP];
+        line.op = "STO";
+        stack[base(stack, line.L, BP) + line.M] = stack[SP];
         SP--;
 
-        //printf("STO %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+        //printf("STO %d %d \t%d \t%d \t%d", L, line.M, PC + 1, BP, SP);
         break;
       case 5:
-        //printf("CAL %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+        //printf("CAL %d %d \t%d \t%d \t%d", L, line.M, PC + 1, BP, SP);
 
-        opr = "CAL";
+        line.op = "CAL";
 
-        stack[SP + 1] = base(stack, L, BP);
+        stack[SP + 1] = base(stack, line.L, BP);
         stack[SP + 2] = BP;
         stack[SP + 3] = PC + 1;
         stack[SP + 4] = stack[SP];
 
         BP = SP + 1;
-        PC = M - 1;
+        PC = line.M - 1;
 
         break;
       case 6:
 
-        opr = "INC";
+        line.op = "INC";
 
-        // sp <- sp + M
-        SP += M;
+        // sp <- sp + line.M
+        SP += line.M;
 
-        //printf("INC %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+        //printf("INC %d %d \t%d \t%d \t%d", L, line.M, PC + 1, BP, SP);
 
         break;
       case 7:
 
-        //printf("JMP %d %d \t%d \t%d \t%d", L, M, M, BP, SP);
+        //printf("JMP %d %d \t%d \t%d \t%d", L, line.M, line.M, BP, SP);
 
-        opr = "JMP";
+        line.op = "JMP";
 
-        // pc <- M, adjusted for arrays being indexed at 0
-        PC = M - 1;
+        // pc <- line.M, adjusted for arrays being indexed at 0
+        PC = line.M - 1;
 
         break;
       case 8:
 
-        // pc <- M iff top of stack == 0
+        // pc <- line.M iff top of stack == 0
         if (SP <= 0)
-          PC = M - 1;
+          PC = line.M - 1;
 
-        opr = "JPC";
-        //printf("JPC %d %d \t%d \t%d \t%d", L, M, PC, BP, SP);
+        line.op = "JPC";
+        //printf("JPC %d %d \t%d \t%d \t%d", L, line.M, PC, BP, SP);
+
+        SP--;
 
         break;
       case 9:
 
-        opr = "SYS";
+        line.op = "SYS";
 
-        switch (M)
+        switch (line.M)
         {
           case 1:
             printf("Top of Stack Value: %d\n", pop(stack));
@@ -272,13 +256,13 @@ void main(int argc, char *argv[])
             break;
         }
 
-        //printf("SYS %d %d \t%d \t%d \t%d", L, M, PC + 1, BP, SP);
+        //printf("SYS %d %d \t%d \t%d \t%d", L, line.M, PC + 1, BP, SP);
         break;
       default:
         break;
     }
 
-    printf("%d\t%s %d %d \t%d \t%d \t%d", counter, opr, L, M, PC + 1, BP, SP);
+    printf("%d\t%s %d %d \t%d \t%d \t%d", counter, line.op, line.L, line.M, PC + 1, BP, SP);
 
     if (SP > -1)
     {
